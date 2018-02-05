@@ -1,5 +1,3 @@
 package edu.finch.resource
 
-class SavePersonRequest {
-
-}
+case class SavePersonRequest(name: String, age: Int)

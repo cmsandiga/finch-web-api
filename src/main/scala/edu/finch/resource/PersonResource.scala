@@ -6,46 +6,40 @@ package edu.finch.resource
   */
 
 import edu.finch.model.Person
+import edu.finch.service.PersonServiceComponent
 import io.circe.generic.auto._
 import io.finch.circe._
 import io.finch.syntax.{get, post}
 import io.finch.{Endpoint, Ok, _}
-import io.getquill._
 
-import scala.collection.mutable
+trait PersonResourceComponent {
+  this: PersonServiceComponent =>
 
-object PersonResource {
+  class PersonResource {
 
-  lazy val ctx = new MysqlJdbcContext[SnakeCase](SnakeCase, "ctx")
+    val personApi = findPersonApi :+: findPersonAllApi :+: postPersonApi
 
-  import ctx._
-
-  val persons = mutable.Map[Long, Person]()
-
-  def getApi: Endpoint[Person] = get("person" :: path[Long]) { id: Long =>
-
-    persons.get(id) match {
-      case Some(person) => Ok(person)
-      case None => NotFound(PersonNotFound(id))
-    }
-  }
-
-  def posted: Endpoint[Person] = jsonBody[Person]
-
-  def postApi: Endpoint[Person] = post("person" :: posted) { (person: Person) =>
-    persons(person.id) = person
-
-    val q = quote {
-      query[Person].insert(person)
+    def findPersonApi: Endpoint[Person] = get("person" :: path[Long]) { id: Long =>
+      personService.findById(id) match {
+        case Some(person) => Ok(person)
+        case None => NotFound(PersonNotFound(id))
+      }
     }
 
-    val result = ctx.run(query[Person])
+    def findPersonAllApi: Endpoint[List[Person]] = get("person") {
+      Ok(personService.findAll())
+    }
 
-    Created(person)
-  }
+    def postPersonApi: Endpoint[Person] = post("person" :: jsonBody[SavePersonRequest]) { (request: SavePersonRequest) =>
+      val person = Person(0L, request.name, request.age)
+      personService.insert(person)
+      Created(person)
+    }
 
-  case class PersonNotFound(id: Long) extends Exception {
-    override def getMessage: String = s"Person(${id.toString}) not found."
+    case class PersonNotFound(id: Long) extends Exception {
+      override def getMessage: String = s"Person(${id.toString}) not found."
+    }
+
   }
 
 }
