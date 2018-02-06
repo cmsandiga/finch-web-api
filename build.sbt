@@ -10,6 +10,7 @@ lazy val mysqlVersion = "5.1.38"
 lazy val quillVersion = "2.3.2"
 lazy val configTypeSafeVersion = "1.3.1"
 lazy val scalaTestVersion = "3.0.4"
+
 libraryDependencies ++= Seq(
   "com.github.finagle" %% "finch-core" % finchVersion,
   "com.github.finagle" %% "finch-circe" % finchVersion,
